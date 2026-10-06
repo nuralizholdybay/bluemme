@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLUEM. — Online Essay Trainer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#0d0c0a',
+                        paper2: '#161411',
+                        paper3: '#221f1a',
+                        ink: '#f3efe6',
+                        'ink-soft': 'rgba(243, 239, 230, 0.66)',
+                        'ink-faint': 'rgba(243, 239, 230, 0.35)',
+                        line: 'rgba(243, 239, 230, 0.16)',
+                        'line-faint': 'rgba(243, 239, 230, 0.08)',
+                        pink: {
+                            DEFAULT: '#ff85bd',
+                            deep: '#e85fa2',
+                            ink: '#7d1444',
+                            glow: 'rgba(255, 133, 189, 0.25)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['"IBM Plex Mono"', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0d0c0a;
+            color: #f3efe6;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Mono Elements */
+        .font-mono, button, .badge, .mono-text, textarea {
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        /* Glassmorphism effects */
+        .glass-nav {
+            background: rgba(13, 12, 10, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(243, 239, 230, 0.12);
+        }
+
+        .glass-card {
+            background: rgba(22, 20, 17, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(243, 239, 230, 0.12);
+        }
+
+        .glass-card-hover {
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-card-hover:hover {
+            border-color: rgba(255, 133, 189, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(255, 133, 189, 0.15);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d0c0a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #221f1a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff85bd;
+        }
+
+        /* Custom active state underline */
+        .nav-link.active {
+            color: #ff85bd;
+            position: relative;
+        }
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #ff85bd;
+            border-radius: 2px;
+            box-shadow: 0 0 8px #ff85bd;
+        }
+
+        /* Tab toggles */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-pink selection:text-paper">
+
+    <!-- Sticky Glass Top Navigation Bar -->
+    <header class="sticky top-0 z-50 glass-nav transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Brand Title (Without Emblem Logo) -->
+                <div class="flex items-center cursor-pointer" onclick="switchTab('dashboard')">
+                    <div>
+                        <span class="font-mono font-black text-2xl tracking-wider text-ink block leading-none">BLUEM<span class="text-pink">.</span></span>
+                        <span class="font-mono text-[10px] font-medium tracking-widest text-ink-soft uppercase block mt-1">Essay Trainer</span>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex items-center space-x-8 text-sm font-medium font-mono">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-link active text-ink-soft hover:text-ink transition-colors py-1">Dashboard</button>
+                    <button onclick="switchTab('trainer')" id="nav-trainer" class="nav-link text-ink-soft hover:text-ink transition-colors py-1">Essay Trainer</button>
+                    <button onclick="switchTab('topics')" id="nav-topics" class="nav-link text-ink-soft hover:text-ink transition-colors py-1">Bank of Topics</button>
+                    <button onclick="switchTab('history')" id="nav-history" class="nav-link text-ink-soft hover:text-ink transition-colors py-1">My Essays</button>
+                    <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-link text-ink-soft hover:text-ink transition-colors py-1">Progress</button>
+                    <button onclick="switchTab('learning')" id="nav-learning" class="nav-link text-ink-soft hover:text-ink transition-colors py-1">Learning Hub</button>
+                </nav>
+
+                <!-- Right Action Bar & Streak -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <!-- Daily Streak Badge -->
+                    <div class="flex items-center space-x-2 bg-paper2 border border-line px-3.5 py-2 rounded-full font-mono" title="Current Daily Practice Streak">
+                        <span class="text-sm">🔥</span>
+                        <span id="streak-counter" class="font-semibold text-xs text-pink tracking-wide">7 DAY STREAK</span>
+                    </div>
+
+                    <!-- User Account / Switch -->
+                    <button onclick="openUserModal()" class="flex items-center space-x-2 bg-paper3 hover:bg-paper2 border border-line px-3.5 py-2 rounded-full transition-all text-xs font-medium text-ink font-mono">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span id="nav-username">@student</span>
+                    </button>
+
+                    <!-- Quick Start Button -->
+                    <button onclick="startTrainingSession()" class="bg-pink hover:bg-pink-deep text-paper font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all shadow-md hover:shadow-pink/20 font-mono">
+                        Start Practice
+                    </button>
+                </div>
+
+                <!-- Mobile Hamburger Button -->
+                <div class="md:hidden flex items-center space-x-3">
+                    <button onclick="toggleMobileMenu()" class="text-ink p-2 focus:outline-none">
+                        <svg id="hamburger-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Drawer -->
+        <div id="mobile-menu" class="hidden md:hidden border-b border-line bg-paper2 px-4 pt-2 pb-6 space-y-3 font-mono">
+            <div class="flex items-center justify-between pb-3 border-b border-line-faint">
+                <div class="flex items-center space-x-2">
+                    <span class="text-base">🔥</span>
+                    <span id="mobile-streak-counter" class="text-xs text-pink font-semibold tracking-wide">7 DAY STREAK</span>
+                </div>
+                <button onclick="openUserModal()" class="text-xs text-ink-soft underline font-medium" id="mobile-username">@student</button>
+            </div>
+            <button onclick="switchTab('dashboard'); toggleMobileMenu()" class="block w-full text-left py-2 text-ink hover:text-pink font-medium">Dashboard</button>
+            <button onclick="switchTab('trainer'); toggleMobileMenu()" class="block w-full text-left py-2 text-ink hover:text-pink font-medium">Essay Trainer</button>
+            <button onclick="switchTab('topics'); toggleMobileMenu()" class="block w-full text-left py-2 text-ink hover:text-pink font-medium">Bank of Topics (37)</button>
+            <button onclick="switchTab('history'); toggleMobileMenu()" class="block w-full text-left py-2 text-ink hover:text-pink font-medium">My Essay Archive</button>
+            <button onclick="switchTab('analytics'); toggleMobileMenu()" class="block w-full text-left py-2 text-ink hover:text-pink font-medium">Progress Analytics</button>
+            <button onclick="switchTab('learning'); toggleMobileMenu()" class="block w-full text-left py-2 text-ink hover:text-pink font-medium">Learning Hub</button>
+            <button onclick="startTrainingSession(); toggleMobileMenu()" class="w-full bg-pink text-paper font-bold py-3 rounded-xl uppercase text-xs tracking-wider font-mono">Start Today's Sprint</button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINERS -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- TAB 1: MAIN DASHBOARD -->
+        <section id="tab-dashboard" class="tab-content active space-y-8">
+            <!-- Hero Banner & Daily Streak -->
+            <div class="relative overflow-hidden glass-card rounded-2xl p-6 sm:p-10 border border-line">
+                <div class="absolute -top-24 -right-24 w-96 h-96 bg-pink/10 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+                    <div class="lg:col-span-8 space-y-4">
+                        <div class="inline-flex items-center space-x-2 bg-pink/10 border border-pink/30 px-3.5 py-1 rounded-full text-xs font-semibold text-pink tracking-wide font-mono">
+                            <span>01 / DAILY ESSAY SPRINT</span>
+                            <span>•</span>
+                            <span>FLEX PROGRAM PREP</span>
+                        </div>
+                        <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-ink leading-tight">
+                            Master Exchange Essays <br class="hidden sm:inline"/>
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink via-pink-deep to-pink-ink">With Precision AI Feedback.</span>
+                        </h1>
+                        <p class="text-ink-soft text-sm sm:text-base max-w-2xl leading-relaxed">
+                            Complete 3 targeted 15-minute essays today. Practice real exchange program situations, track your character boundaries, and receive actionable grammatical & stylistic evaluations.
+                        </p>
+                        
+                        <div class="pt-4 flex flex-wrap gap-4 items-center">
+                            <button onclick="startTrainingSession()" class="bg-pink hover:bg-pink-deep text-paper font-extrabold text-sm uppercase tracking-widest px-8 py-4 rounded-xl transition-all shadow-lg shadow-pink/20 hover:scale-[1.01] flex items-center space-x-3 font-mono">
+                                <span>Start 3-Essay Sprint</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            </button>
+                            <button onclick="switchTab('topics')" class="bg-paper2 hover:bg-paper3 text-ink border border-line px-6 py-4 rounded-xl text-sm font-medium transition-all font-mono">
+                                Browse Topics Bank
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Daily Checklist SVG Ring Widget -->
+                    <div class="lg:col-span-4 flex flex-col items-center justify-center p-6 bg-paper2/80 rounded-2xl border border-line text-center">
+                        <span class="text-xs uppercase tracking-widest text-ink-soft font-semibold mb-2 font-mono">Today's Progress</span>
+                        
+                        <!-- Interactive SVG Ring -->
+                        <div class="relative w-36 h-36 my-2 flex items-center justify-center">
+                            <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 36 36">
+                                <path class="text-paper3" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path id="dashboard-progress-ring" class="text-pink stroke-current transition-all duration-1000 ease-out" stroke-dasharray="0, 100" stroke-width="3.5" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <div class="absolute flex flex-col items-center justify-center">
+                                <span id="dash-essays-done-num" class="text-3xl font-black text-ink font-mono">0/3</span>
+                                <span class="text-[10px] text-ink-soft uppercase font-semibold tracking-wider font-mono">Essays</span>
+                            </div>
+                        </div>
+
+                        <p id="dash-streak-status-text" class="text-xs text-ink-soft mt-2">
+                            Complete 3 essays today to extend your streak!
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Overview Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="glass-card p-5 rounded-xl border border-line">
+                    <span class="text-xs text-ink-soft uppercase font-semibold tracking-wider block font-mono">Total Essays</span>
+                    <div id="stat-total-essays" class="text-3xl font-bold text-ink mt-2 font-mono">0</div>
+                    <span class="text-[11px] text-pink font-medium mt-1 block font-mono">+ FLEX Prompts</span>
+                </div>
+                <div class="glass-card p-5 rounded-xl border border-line">
+                    <span class="text-xs text-ink-soft uppercase font-semibold tracking-wider block font-mono">Average Score</span>
+                    <div id="stat-avg-score" class="text-3xl font-bold text-pink mt-2 font-mono">0.0</div>
+                    <span class="text-[11px] text-ink-soft font-medium mt-1 block font-mono">out of 10.0</span>
+                </div>
+                <div class="glass-card p-5 rounded-xl border border-line">
+                    <span class="text-xs text-ink-soft uppercase font-semibold tracking-wider block font-mono">Best Essay</span>
+                    <div id="stat-best-score" class="text-3xl font-bold text-emerald-400 mt-2 font-mono">0.0</div>
+                    <span class="text-[11px] text-ink-soft font-medium mt-1 block font-mono">All-time High</span>
+                </div>
+                <div class="glass-card p-5 rounded-xl border border-line">
+                    <span class="text-xs text-ink-soft uppercase font-semibold tracking-wider block font-mono">Active Streak</span>
+                    <div id="stat-streak-days" class="text-3xl font-bold text-amber-400 mt-2 font-mono">7 Days</div>
+                    <span class="text-[11px] text-ink-soft font-medium mt-1 block font-mono">Keep it up! 🔥</span>
+                </div>
+            </div>
+
+            <!-- Daily Recommended Practice Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Recommended Topic Card -->
+                <div class="lg:col-span-2 glass-card rounded-2xl p-6 border border-line space-y-4 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-pink uppercase font-semibold tracking-wider font-mono">02 / Today's Featured Prompt</span>
+                            <span class="bg-paper3 text-xs font-medium px-2.5 py-1 rounded text-ink-soft font-mono">Host Family</span>
+                        </div>
+                        <h3 id="featured-topic-title" class="text-xl font-bold text-ink leading-snug">
+                            "Describe a situation where you had a disagreement with your parents or host family. How did you handle it?"
+                        </h3>
+                        <p id="featured-topic-ru" class="text-sm text-ink-soft italic">
+                            Опишите ситуацию, когда у вас было разногласие с родителями или принимающей семьей. Как вы справились?
+                        </p>
+                    </div>
+                    <div class="pt-4 flex items-center justify-between border-t border-line-faint">
+                        <span class="text-xs text-ink-faint font-medium font-mono">Constraint: 250 - 1500 chars</span>
+                        <button onclick="startSingleTopicPractice(null)" class="bg-paper2 hover:bg-pink hover:text-paper text-ink border border-line text-xs font-semibold px-4 py-2 rounded-lg transition-all font-mono">
+                            Practice This Topic
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Tips Card -->
+                <div class="glass-card rounded-2xl p-6 border border-line space-y-4 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <span class="text-xs text-pink uppercase font-semibold tracking-wider block font-mono">03 / Exchange Essay Rule</span>
+                        <h4 class="text-lg font-bold text-ink">Focus on Concrete Actions</h4>
+                        <p class="text-xs text-ink-soft leading-relaxed">
+                            Evaluators look for personal maturity, emotional resilience, and adaptability. Avoid general reflections—share specific steps you took to resolve conflicts or overcome challenges.
+                        </p>
+                    </div>
+                    <div class="bg-paper2 border-l-2 border-pink p-3 rounded-r-lg">
+                        <p class="text-[11px] font-medium text-ink-soft italic">
+                            "Show, don't just tell. Use past tense action verbs (e.g., *initiated*, *explained*, *adapted*)."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: ESSAY TRAINER MODE (3-ESSAY SEQUENTIAL SPRINT) -->
+        <section id="tab-trainer" class="tab-content space-y-6">
+            <!-- Trainer Progress Header Bar -->
+            <div class="glass-card p-4 sm:p-6 rounded-2xl border border-line flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <span class="text-xs text-pink uppercase font-semibold tracking-wider font-mono">Sprint Progress:</span>
+                    <!-- 3 Steps Indicator -->
+                    <div class="flex items-center space-x-2 font-mono">
+                        <div id="trainer-step-1" class="w-8 h-8 rounded-full border border-pink bg-pink text-paper font-bold text-xs flex items-center justify-center">1</div>
+                        <div class="w-6 h-0.5 bg-line"></div>
+                        <div id="trainer-step-2" class="w-8 h-8 rounded-full border border-line text-ink-soft font-bold text-xs flex items-center justify-center">2</div>
+                        <div class="w-6 h-0.5 bg-line"></div>
+                        <div id="trainer-step-3" class="w-8 h-8 rounded-full border border-line text-ink-soft font-bold text-xs flex items-center justify-center">3</div>
+                    </div>
+                </div>
+
+                <!-- Countdown Timer -->
+                <div class="flex items-center space-x-3 bg-paper2 border border-pink/30 px-5 py-2 rounded-xl font-mono">
+                    <svg class="w-5 h-5 text-pink animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="text-xs text-ink-soft uppercase font-semibold">Time Remaining:</span>
+                    <span id="trainer-timer" class="font-bold text-xl text-pink">15:00</span>
+                </div>
+
+                <!-- Cancel / Reset -->
+                <button onclick="confirmResetTrainer()" class="text-xs font-medium text-ink-soft hover:text-red-400 transition-colors font-mono">
+                    Exit Session
+                </button>
+            </div>
+
+            <!-- Main Writing Canvas Container -->
+            <div id="trainer-writing-area" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Left: Topic Details & Hints -->
+                <div class="lg:col-span-4 space-y-4">
+                    <div class="glass-card p-6 rounded-2xl border border-line space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span id="trainer-essay-index" class="text-xs text-pink uppercase font-semibold tracking-wider font-mono">Essay 1 of 3</span>
+                            <span id="trainer-topic-category" class="bg-paper3 text-[11px] font-medium px-2.5 py-1 rounded text-ink-soft font-mono">Category</span>
+                        </div>
+                        <h2 id="trainer-topic-en" class="text-xl font-bold text-ink leading-snug">
+                            Loading prompt...
+                        </h2>
+                        <p id="trainer-topic-ru" class="text-sm text-ink-soft italic border-t border-line-faint pt-3">
+                            Загрузка подсказки...
+                        </p>
+                        
+                        <!-- Writing Guidelines Checklist -->
+                        <div class="space-y-2 pt-4 border-t border-line-faint font-mono">
+                            <span class="text-[11px] text-ink-soft uppercase font-semibold tracking-wider block">Writing Requirements:</span>
+                            <ul class="text-xs text-ink-soft space-y-1.5 list-disc list-inside">
+                                <li>Min length: 250 characters</li>
+                                <li>Max length: 1500 characters</li>
+                                <li>Use personal examples and actions</li>
+                                <li>Clear introduction & conclusion</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Autosave Indicator -->
+                    <div class="flex items-center justify-between px-2 text-xs font-medium text-ink-faint font-mono">
+                        <span id="autosave-status">Draft auto-saved locally</span>
+                        <button onclick="clearDraftAndReset()" class="underline hover:text-ink">Clear draft</button>
+                    </div>
+                </div>
+
+                <!-- Right: Interactive Editor -->
+                <div class="lg:col-span-8 flex flex-col space-y-4">
+                    <div class="glass-card p-6 rounded-2xl border border-line flex-grow flex flex-col space-y-4">
+                        <div class="flex items-center justify-between border-b border-line pb-3">
+                            <span class="text-xs text-ink-soft uppercase font-semibold tracking-wider font-mono">Response Editor</span>
+                            <!-- Character Live Counter -->
+                            <div id="char-counter-badge" class="text-xs px-3 py-1 rounded-full bg-paper3 border border-line text-amber-400 font-medium font-mono">
+                                <span id="char-count">0</span> / 1500 Chars (Min: 250)
+                            </div>
+                        </div>
+
+                        <!-- Textarea -->
+                        <textarea id="essay-textarea" oninput="handleEssayInput()" class="w-full flex-grow min-h-[320px] bg-paper2/50 border border-line rounded-xl p-4 text-ink placeholder-ink-faint focus:outline-none focus:border-pink transition-all text-base leading-relaxed resize-y font-mono" placeholder="Start typing your essay here... Be specific and detailed about your personal experience."></textarea>
+
+                        <!-- Error/Warning Alert Box -->
+                        <div id="editor-warning" class="hidden bg-red-950/40 border border-red-500/30 p-3 rounded-xl text-xs text-red-300 font-medium font-mono">
+                            Warning message here...
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="flex items-center justify-between pt-2">
+                            <span class="text-xs text-ink-soft font-medium font-mono">Press submit when ready for AI evaluation.</span>
+                            <button id="submit-essay-btn" onclick="submitCurrentEssay()" disabled class="bg-pink opacity-50 cursor-not-allowed hover:bg-pink-deep text-paper font-extrabold text-sm uppercase tracking-widest px-8 py-3.5 rounded-xl transition-all shadow-md font-mono">
+                                Submit for Evaluation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Evaluation Screen (Shown after submitting an essay) -->
+            <div id="trainer-ai-feedback-view" class="hidden space-y-6">
+                <!-- Evaluation Banner -->
+                <div class="glass-card p-6 rounded-2xl border border-line bg-gradient-to-r from-paper2 to-paper3 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div>
+                        <div class="inline-flex items-center space-x-2 bg-pink/20 text-pink text-xs font-semibold tracking-wide px-3 py-1 rounded-full mb-2 font-mono">
+                            <span>✓ EVALUATION COMPLETE</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-ink">AI Writing Analysis</h2>
+                        <p class="text-sm text-ink-soft">Detailed feedback generated for your essay submission.</p>
+                    </div>
+
+                    <!-- Overall Score Circle -->
+                    <div class="flex items-center space-x-4 bg-paper/60 p-4 rounded-xl border border-line font-mono">
+                        <div class="text-right">
+                            <span class="text-xs text-ink-soft uppercase font-semibold tracking-wider block">Overall Score</span>
+                            <span id="ai-overall-score-text" class="text-3xl font-black text-pink">8.5</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-full border-2 border-pink flex items-center justify-center font-bold text-pink">
+                            /10
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Criteria Scores Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-mono">
+                    <div class="glass-card p-4 rounded-xl border border-line space-y-2">
+                        <div class="flex justify-between items-center text-xs font-medium">
+                            <span class="text-ink-soft">Grammar</span>
+                            <span id="score-grammar-num" class="text-pink font-bold">8/10</span>
+                        </div>
+                        <div class="w-full bg-paper3 h-2 rounded-full overflow-hidden">
+                            <div id="bar-grammar" class="bg-pink h-full transition-all duration-1000" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl border border-line space-y-2">
+                        <div class="flex justify-between items-center text-xs font-medium">
+                            <span class="text-ink-soft">Vocabulary</span>
+                            <span id="score-vocab-num" class="text-pink font-bold">9/10</span>
+                        </div>
+                        <div class="w-full bg-paper3 h-2 rounded-full overflow-hidden">
+                            <div id="bar-vocab" class="bg-pink h-full transition-all duration-1000" style="width: 90%"></div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl border border-line space-y-2">
+                        <div class="flex justify-between items-center text-xs font-medium">
+                            <span class="text-ink-soft">Structure & Flow</span>
+                            <span id="score-struct-num" class="text-pink font-bold">8/10</span>
+                        </div>
+                        <div class="w-full bg-paper3 h-2 rounded-full overflow-hidden">
+                            <div id="bar-struct" class="bg-pink h-full transition-all duration-1000" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl border border-line space-y-2">
+                        <div class="flex justify-between items-center text-xs font-medium">
+                            <span class="text-ink-soft">Personal Content</span>
+                            <span id="score-content-num" class="text-pink font-bold">9/10</span>
+                        </div>
+                        <div class="w-full bg-paper3 h-2 rounded-full overflow-hidden">
+                            <div id="bar-content" class="bg-pink h-full transition-all duration-1000" style="width: 90%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mistakes & Correction Breakdown -->
+                <div class="glass-card p-6 rounded-2xl border border-line space-y-4">
+                    <h3 class="text-lg font-bold text-ink">Grammatical & Phrasing Corrections</h3>
+                    
+                    <div class="overflow-x-auto font-mono">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-line text-xs font-semibold text-ink-soft uppercase tracking-wider">
+                                    <th class="p-3">Original Text</th>
+                                    <th class="p-3">Correction</th>
+                                    <th class="p-3">Grammar Explanation</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corrections-table-body" class="divide-y divide-line-faint text-xs">
+                                <!-- Dynamic corrections rows populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Polished Improved Version -->
+                <div class="glass-card p-6 rounded-2xl border border-line space-y-3 bg-paper2/60">
+                    <div class="flex items-center justify-between font-mono">
+                        <span class="text-xs text-pink uppercase font-semibold tracking-wider">Enhanced Essay Version</span>
+                        <button onclick="copyImprovedEssay()" class="text-xs text-ink-soft hover:text-ink underline font-medium">Copy Text</button>
+                    </div>
+                    <p id="improved-essay-text" class="text-sm text-ink leading-relaxed bg-paper/50 p-4 rounded-xl border border-line-faint font-mono">
+                        "Enhanced essay version will appear here..."
+                    </p>
+                </div>
+
+                <!-- Actionable Recommendations -->
+                <div class="glass-card p-6 rounded-2xl border border-line space-y-3">
+                    <h4 class="text-base font-bold text-ink">Key Takeaways For Next Essay</h4>
+                    <ul id="ai-recommendations-list" class="space-y-2 text-xs text-ink-soft list-disc list-inside">
+                        <!-- Dynamic tips -->
+                    </ul>
+                </div>
+
+                <!-- Next Essay / Finish Sprint Button -->
+                <div class="flex justify-end pt-4">
+                    <button id="next-sprint-step-btn" onclick="proceedToNextSprintStep()" class="bg-pink hover:bg-pink-deep text-paper font-extrabold text-sm uppercase tracking-widest px-8 py-4 rounded-xl transition-all shadow-lg shadow-pink/20 font-mono">
+                        Continue to Essay 2 →
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sprint Summary Modal / Screen -->
+            <div id="trainer-sprint-summary-view" class="hidden glass-card p-8 rounded-2xl border border-line text-center space-y-6">
+                <div class="w-20 h-20 bg-pink/20 text-pink rounded-full flex items-center justify-center text-4xl mx-auto mb-2 animate-bounce">
+                    🎉
+                </div>
+                <h2 class="text-3xl font-black text-ink">3-Essay Sprint Completed!</h2>
+                <p class="text-ink-soft text-sm max-w-lg mx-auto">
+                    Outstanding effort! You've written 3 exchange program essays today and updated your daily training streak.
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto pt-4 font-mono">
+                    <div class="bg-paper2 p-4 rounded-xl border border-line">
+                        <span class="text-xs text-ink-soft font-semibold block">Sprint Average</span>
+                        <span id="sprint-avg-score" class="text-2xl font-bold text-pink mt-1 block">8.7</span>
+                    </div>
+                    <div class="bg-paper2 p-4 rounded-xl border border-line">
+                        <span class="text-xs text-ink-soft font-semibold block">Total Characters</span>
+                        <span id="sprint-total-chars" class="text-2xl font-bold text-ink mt-1 block">2,450</span>
+                    </div>
+                    <div class="bg-paper2 p-4 rounded-xl border border-line">
+                        <span class="text-xs text-ink-soft font-semibold block">New Streak</span>
+                        <span id="sprint-new-streak" class="text-2xl font-bold text-amber-400 mt-1 block">8 Days</span>
+                    </div>
+                </div>
+
+                <div class="pt-6 flex justify-center space-x-4 font-mono">
+                    <button onclick="switchTab('history')" class="bg-paper2 hover:bg-paper3 text-ink text-xs font-semibold px-6 py-3 rounded-xl border border-line">
+                        View Essays Archive
+                    </button>
+                    <button onclick="switchTab('dashboard')" class="bg-pink hover:bg-pink-deep text-paper font-extrabold text-xs uppercase tracking-widest px-8 py-3.5 rounded-xl">
+                        Return to Dashboard
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: FULL BANK OF TOPICS (37 PROMPTS) -->
+        <section id="tab-topics" class="tab-content space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-line pb-6">
+                <div>
+                    <h2 class="text-3xl font-black text-ink">Bank of Essay Topics</h2>
+                    <p class="text-ink-soft text-sm mt-1">37 Exchange Program (FLEX / UWC) Essay Prompts with translations.</p>
+                </div>
+                
+                <!-- Random Practice Button -->
+                <button onclick="practiceRandomTopic()" class="bg-pink hover:bg-pink-deep text-paper font-extrabold text-xs uppercase tracking-widest px-6 py-3 rounded-xl transition-all shadow-md font-mono">
+                    🎲 Practice Random Prompt
+                </button>
+            </div>
+
+            <!-- Search & Filters -->
+            <div class="flex flex-col sm:flex-row gap-4 font-mono">
+                <input type="text" id="topic-search-input" oninput="filterTopics()" placeholder="Search prompts by keyword..." class="bg-paper2 border border-line text-ink rounded-xl px-4 py-2.5 text-sm flex-grow focus:outline-none focus:border-pink">
+                
+                <select id="topic-category-filter" onchange="filterTopics()" class="bg-paper2 border border-line text-ink rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-pink">
+                    <option value="ALL">All Categories</option>
+                    <option value="Host Family">Host Family & Relationships</option>
+                    <option value="Personal Growth">Personal Growth & Adaptability</option>
+                    <option value="Overcoming Challenges">Overcoming Challenges</option>
+                    <option value="Community & Friends">Friends & School</option>
+                </select>
+            </div>
+
+            <!-- Prompts Grid Container -->
+            <div id="topics-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Dynamically populated 37 topic cards -->
+            </div>
+        </section>
+
+        <!-- TAB 4: MY ESSAYS HISTORY & ARCHIVE -->
+        <section id="tab-history" class="tab-content space-y-6">
+            <div class="flex items-center justify-between border-b border-line pb-6">
+                <div>
+                    <h2 class="text-3xl font-black text-ink">My Essay Archive</h2>
+                    <p class="text-ink-soft text-sm mt-1">Review past writings, score breakdowns, and corrections.</p>
+                </div>
+            </div>
+
+            <!-- History List Container -->
+            <div id="history-container" class="space-y-4">
+                <!-- Dynamically rendered past essays or empty state -->
+            </div>
+        </section>
+
+        <!-- TAB 5: PROGRESS ANALYTICS -->
+        <section id="tab-analytics" class="tab-content space-y-8">
+            <div class="border-b border-line pb-6">
+                <h2 class="text-3xl font-black text-ink">Progress & Analytics</h2>
+                <p class="text-ink-soft text-sm mt-1">Visual tracking of writing score improvements and skill metrics.</p>
+            </div>
+
+            <!-- SVG Score Progress Trend Chart -->
+            <div class="glass-card p-6 rounded-2xl border border-line space-y-4">
+                <div class="flex items-center justify-between font-mono">
+                    <span class="text-xs text-pink uppercase font-semibold tracking-wider">Score Progression Trend</span>
+                    <span class="text-xs text-ink-soft font-medium">Last 7 Sessions</span>
+                </div>
+
+                <!-- Custom Interactive SVG Line Chart -->
+                <div class="w-full h-64 relative pt-4">
+                    <svg class="w-full h-full overflow-visible" viewBox="0 0 500 200" preserveAspectRatio="none">
+                        <!-- Horizontal Gridlines -->
+                        <line x1="0" y1="40" x2="500" y2="40" stroke="rgba(243, 239, 230, 0.08)" stroke-dasharray="4" />
+                        <line x1="0" y1="90" x2="500" y2="90" stroke="rgba(243, 239, 230, 0.08)" stroke-dasharray="4" />
+                        <line x1="0" y1="140" x2="500" y2="140" stroke="rgba(243, 239, 230, 0.08)" stroke-dasharray="4" />
+                        
+                        <!-- Smooth Trend Line -->
+                        <path id="analytics-chart-line" d="M0,150 Q75,130 150,110 T300,70 T500,45" fill="none" stroke="#ff85bd" stroke-width="4" stroke-linecap="round" />
+                        
+                        <!-- Gradient Fill under curve -->
+                        <path d="M0,150 Q75,130 150,110 T300,70 T500,45 L500,200 L0,200 Z" fill="url(#pink-gradient)" opacity="0.2"/>
+                        
+                        <defs>
+                            <linearGradient id="pink-gradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#ff85bd" />
+                                <stop offset="100%" stop-color="#ff85bd" stop-opacity="0" />
+                            </linearGradient>
+                        </defs>
+
+                        <!-- Data Points -->
+                        <circle cx="0" cy="150" r="5" fill="#ff85bd" />
+                        <circle cx="125" cy="115" r="5" fill="#ff85bd" />
+                        <circle cx="250" cy="85" r="5" fill="#ff85bd" />
+                        <circle cx="375" cy="60" r="5" fill="#ff85bd" />
+                        <circle cx="500" cy="45" r="6" fill="#ff85bd" stroke="#0d0c0a" stroke-width="2" />
+                    </svg>
+                </div>
+
+                <div class="flex justify-between text-[11px] font-medium text-ink-soft border-t border-line-faint pt-3 font-mono">
+                    <span>Session 1 (6.5)</span>
+                    <span>Session 2 (7.2)</span>
+                    <span>Session 3 (8.0)</span>
+                    <span>Session 4 (8.6)</span>
+                    <span>Latest (9.1)</span>
+                </div>
+            </div>
+
+            <!-- Skill Radar Breakdown Bars -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-card p-6 rounded-2xl border border-line space-y-3">
+                    <span class="text-xs text-ink-soft uppercase font-semibold tracking-wider block font-mono">Grammar Mastery</span>
+                    <div class="text-2xl font-bold text-ink font-mono">84%</div>
+                    <p class="text-xs text-ink-soft">Most common issue: Verb tense consistency in past reflections.</p>
+                </div>
+                <div class="glass-card p-6 rounded-2xl border border-line space-y-3">
+                    <span class="text-xs text-ink-soft uppercase font-semibold tracking-wider block font-mono">Vocabulary Range</span>
+                    <div class="text-2xl font-bold text-pink font-mono">92%</div>
+                    <p class="text-xs text-ink-soft">Strong use of descriptive action verbs and transitional phrases.</p>
+                </div>
+                <div class="glass-card p-6 rounded-2xl border border-line space-y-3">
+                    <span class="text-xs text-ink-soft uppercase font-semibold tracking-wider block font-mono">Structure & Coherence</span>
+                    <div class="text-2xl font-bold text-emerald-400 font-mono">88%</div>
+                    <p class="text-xs text-ink-soft">Excellent essay length management (avg 820 characters).</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: EXTRA LEARNING HUB (GRAMMAR & VOCABULARY) -->
+        <section id="tab-learning" class="tab-content space-y-8">
+            <div class="border-b border-line pb-6">
+                <h2 class="text-3xl font-black text-ink">Learning Hub</h2>
+                <p class="text-ink-soft text-sm mt-1">Exchange essay grammar guides & curated daily vocabulary.</p>
+            </div>
+
+            <!-- Vocabulary Theme of the Week Widget -->
+            <div class="glass-card p-6 rounded-2xl border border-line space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-xs text-pink uppercase font-semibold tracking-wider font-mono">Vocabulary Theme of the Week</span>
+                        <h3 class="text-xl font-bold text-ink mt-1">Essential Exchange Essay Verbs</h3>
+                    </div>
+                    <span class="bg-pink/10 text-pink text-xs font-semibold px-3 py-1 rounded-full border border-pink/20 font-mono">25 Key Terms</span>
+                </div>
+
+                <!-- Interactive Vocabulary Flashcards Grid -->
+                <div id="vocab-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                    <!-- Dynamic Vocab Cards -->
+                </div>
+            </div>
+
+            <!-- Grammar Quick Guides -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-card p-6 rounded-2xl border border-line space-y-3">
+                    <span class="text-xs text-pink uppercase font-semibold tracking-wider font-mono">Grammar Rule #1</span>
+                    <h4 class="text-lg font-bold text-ink">Avoid Present Continuous for Habits</h4>
+                    <p class="text-xs text-ink-soft leading-relaxed font-mono">
+                        Incorrect: "I am helping my host mom every evening."<br/>
+                        Correct: "I <span class="text-pink font-semibold">help</span> my host mom every evening." or "I <span class="text-pink font-semibold">helped</span> my host mom..."
+                    </p>
+                </div>
+                <div class="glass-card p-6 rounded-2xl border border-line space-y-3">
+                    <span class="text-xs text-pink uppercase font-semibold tracking-wider font-mono">Grammar Rule #2</span>
+                    <h4 class="text-lg font-bold text-ink">Specific Time = Past Simple</h4>
+                    <p class="text-xs text-ink-soft leading-relaxed font-mono">
+                        Incorrect: "I have joined the student council last year."<br/>
+                        Correct: "I <span class="text-pink font-semibold">joined</span> the student council last year."
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- USER PROFILE / ACCOUNT SWITCH MODAL -->
+    <div id="user-modal" class="fixed inset-0 bg-paper/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full p-6 rounded-2xl border border-line space-y-6 bg-paper2 relative">
+            <button onclick="closeUserModal()" class="absolute top-4 right-4 text-ink-soft hover:text-ink">✕</button>
+            
+            <div class="text-center space-y-2">
+                <div class="w-12 h-12 bg-pink/10 text-pink rounded-xl flex items-center justify-center text-xl mx-auto font-bold font-mono">
+                    @
+                </div>
+                <h3 class="text-xl font-bold text-ink">User Profile & Switch Account</h3>
+                <p class="text-xs text-ink-soft">Enter your username to load your local saved essays and streak.</p>
+            </div>
+
+            <div class="space-y-4 font-mono">
+                <div>
+                    <label class="text-xs text-ink-soft font-semibold block mb-1">Username:</label>
+                    <input type="text" id="username-input" class="w-full bg-paper3 border border-line text-ink rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink" placeholder="e.g. flex_scholar_2026">
+                </div>
+
+                <button onclick="saveUserProfile()" class="w-full bg-pink hover:bg-pink-deep text-paper font-bold py-3 rounded-xl uppercase text-xs tracking-wider transition-all">
+                    Save & Switch Profile
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ------------------------------------------------------------------
+           FULL 37 PROMPTS DATABASE (FLEX & EXCHANGE PROGRAM STYLE)
+        ------------------------------------------------------------------ */
+        const TOPICS_BANK = [
+            { id: 1, category: "Host Family", en: "Describe a situation where you had a disagreement with your parents or family. How did you handle it?", ru: "Опишите ситуацию, когда у вас возникли разногласия с родителями или семьей. Как вы справились?" },
+            { id: 2, category: "Host Family", en: "Imagine your host family serves food that you really dislike or cannot eat. What would you do and say?", ru: "Представьте, что принимающая семья подает еду, которая вам не нравится. Что вы сделаете и скажете?" },
+            { id: 3, category: "Host Family", en: "How will you handle feeling homesick during your exchange year?", ru: "Как вы справитесь с тоской по дому во время года обмена?" },
+            { id: 4, category: "Host Family", en: "Describe a time you had to adapt to a family rule or routine you did not like.", ru: "Опишите случай, когда вам пришлось приспосабливаться к семейному правилу, которое вам не нравилось." },
+            { id: 5, category: "Host Family", en: "How do you plan to introduce your native culture to your host family?", ru: "Как вы планируете познакомить принимающую семью со своей культурой?" },
+            { id: 6, category: "Host Family", en: "Describe a situation where you helped resolve a household conflict.", ru: "Опишите ситуацию, когда вы помогли разрешить бытовой конфликт." },
+            { id: 7, category: "Host Family", en: "If your host siblings feel you are getting more attention than them, how will you address it?", ru: "Если ваши принимающие братья/сестры посчитают, что вам уделяют больше внимания, что вы сделаете?" },
+            { id: 8, category: "Host Family", en: "How will you balance spending time with your host family and studying?", ru: "Как вы будете балансировать между общением с принимающей семьей и учебой?" },
+            { id: 9, category: "Host Family", en: "Describe a time you showed appreciation to someone in your family.", ru: "Опишите случай, когда вы проявили благодарность кому-то из членов семьи." },
+            { id: 10, category: "Host Family", en: "What steps will you take if you feel misunderstood by your host parents?", ru: "Какие шаги вы предпримете, если почувствуете, что принимающие родители вас не понимают?" },
+
+            { id: 11, category: "Personal Growth", en: "Describe a time you failed at something important. What did you learn?", ru: "Опишите случай, когда вы потерпели неудачу в чем-то важном. Чему вы научились?" },
+            { id: 12, category: "Personal Growth", en: "Describe a goal you set for yourself and the steps you took to achieve it.", ru: "Опишите цель, которую вы себе поставили, и шаги для ее достижения." },
+            { id: 13, category: "Personal Growth", en: "How have you changed or grown over the past three years?", ru: "Как вы изменились или выросли за последние три года?" },
+            { id: 14, category: "Personal Growth", en: "Describe a situation where you had to step out of your comfort zone.", ru: "Опишите ситуацию, когда вам пришлось выйти из зоны комфорта." },
+            { id: 15, category: "Personal Growth", en: "What is your biggest personal strength, and how has it helped you in life?", ru: "Какова ваша главная личная сила и как она помогла вам в жизни?" },
+            { id: 16, category: "Personal Growth", en: "Describe a habit or trait you are actively trying to improve.", ru: "Опишите привычку или черту характера, которую вы пытаетесь улучшить." },
+            { id: 17, category: "Personal Growth", en: "Describe a decision you made independently without asking your parents.", ru: "Опишите решение, которое вы приняли самостоятельно без помощи родителей." },
+            { id: 18, category: "Personal Growth", en: "How do you respond when plans change unexpectedly?", ru: "Как вы реагируете, когда планы неожиданно меняются?" },
+            { id: 19, category: "Personal Growth", en: "Describe a situation where you demonstrated patience.", ru: "Опишите ситуацию, в которой вы проявили терпение." },
+            { id: 20, category: "Personal Growth", en: "What does flexibility mean to you? Give an example from your life.", ru: "Что для вас означает гибкость? Приведите пример из жизни." },
+
+            { id: 21, category: "Overcoming Challenges", en: "Describe a difficult challenge you faced and how you overcame it.", ru: "Опишите сложную проблему, с которой вы столкнулись, и как вы ее преодолели." },
+            { id: 22, category: "Overcoming Challenges", en: "Describe a time you were under high stress. How did you manage it?", ru: "Опишите период сильного стресса. Как вы справились с ним?" },
+            { id: 23, category: "Overcoming Challenges", en: "How do you cope with academic pressure or difficult school subjects?", ru: "Как вы справляетесь с учебным давлением или сложными предметами?" },
+            { id: 24, category: "Overcoming Challenges", en: "Describe a situation where you had to solve a problem with limited resources.", ru: "Опишите ситуацию, когда пришлось решать проблему с ограниченными ресурсами." },
+            { id: 25, category: "Overcoming Challenges", en: "Have you ever been in an environment where you felt isolated? What did you do?", ru: "Были ли вы в ситуации изоляции? Что вы предприняли?" },
+            { id: 26, category: "Overcoming Challenges", en: "Describe a time you made a mistake that affected others and how you fixed it.", ru: "Опишите ошибку, которая повлияла на других, и как вы ее исправили." },
+            { id: 27, category: "Overcoming Challenges", en: "How do you handle negative criticism from teachers or peers?", ru: "Как вы реагируете на критику со стороны учителей или сверстников?" },
+            { id: 28, category: "Overcoming Challenges", en: "Describe a time you had to stand up for your values or beliefs.", ru: "Опишите случай, когда вам пришлось отстаивать свои ценности." },
+            { id: 29, category: "Overcoming Challenges", en: "Describe a project that didn't go as planned and how you saved it.", ru: "Опишите проект, который пошел не по плану, и как вы его спасли." },
+
+            { id: 30, category: "Community & Friends", en: "Describe a conflict you had with a friend and how you resolved it.", ru: "Опишите конфликт с другом и как вы его разрешили." },
+            { id: 31, category: "Community & Friends", en: "Describe a community or volunteer project you participated in.", ru: "Опишите волонтерский или общественный проект, в котором вы участвовали." },
+            { id: 32, category: "Community & Friends", en: "How do you make new friends in an unfamiliar environment?", ru: "Как вы заводите новых друзей в незнакомой обстановке?" },
+            { id: 33, category: "Community & Friends", en: "Describe a time you worked in a team with very different personalities.", ru: "Опишите опыт работы в команде с разными людьми." },
+            { id: 34, category: "Community & Friends", en: "How do you support a friend who is going through a tough time?", ru: "Как вы поддерживаете друга в трудную минуту?" },
+            { id: 35, category: "Community & Friends", en: "Describe a situation where you took a leadership role.", ru: "Опишите ситуацию, когда вы взяли на себя роль лидера." },
+            { id: 36, category: "Community & Friends", en: "Describe a time you were a good follower or team member.", ru: "Опишите случай, когда вы проявили себя как хороший командный игрок." },
+            { id: 37, category: "Community & Friends", en: "What contribution do you hope to make to your host school and community?", ru: "Какой вклад вы надеетесь внести в принимающую школу и общество?" }
+        ];
+
+        /* VOCABULARY TERMS DATA */
+        const VOCAB_LIST = [
+            { word: "Adaptability", ipa: "/əˌdæp.təˈbɪl.ə.ti/", def: "The quality of being able to adjust to new conditions.", ex: "My adaptability helped me quickly feel comfortable with my host family." },
+            { word: "Resilience", ipa: "/rɪˈzɪl.jəns/", def: "The capacity to recover quickly from difficulties.", ex: "I showed resilience when my first project failed." },
+            { word: "Initiative", ipa: "/ɪˈnɪʃ.ə.tɪv/", def: "The ability to assess and initiate things independently.", ex: "I took the initiative to apologize after the misunderstanding." },
+            { word: "Compromise", ipa: "/ˈkɒm.prə.maɪz/", def: "An agreement reached by each side making concessions.", ex: "We reached a compromise regarding household chores." },
+            { word: "Perseverance", ipa: "/ˌpɜː.sɪˈvɪə.rəns/", def: "Persistence in doing something despite difficulty.", ex: "Through perseverance, I improved my public speaking skills." },
+            { word: "Empathetic", ipa: "/ˌem.pəˈθet.ɪk/", def: "Showing an ability to understand others' feelings.", ex: "Being empathetic allowed me to understand my friend's point of view." }
+        ];
+
+        /* STATE MANAGEMENT */
+        let state = {
+            username: "student",
+            streakDays: 7,
+            essaysWrittenToday: 0,
+            pastEssays: [],
+            
+            // Sprint Mode state
+            currentSprintStep: 1, // 1, 2, 3
+            sprintTopics: [],
+            sprintResponses: [],
+            timerSeconds: 900, // 15 mins
+            timerInterval: null
+        };
+
+        /* INITIALIZATION ON WINDOW LOAD */
+        window.onload = function() {
+            loadUserData();
+            renderTopicsBank(TOPICS_BANK);
+            renderVocabCards();
+            updateDashboardUI();
+            checkDraftOnLoad();
+        }
+
+        /* LOCAL STORAGE USER LOAD & SAVE */
+        function loadUserData() {
+            const savedUser = localStorage.getItem('bluem_username');
+            if (savedUser) state.username = savedUser;
+
+            const savedEssays = localStorage.getItem(`bluem_essays_${state.username}`);
+            if (savedEssays) {
+                try {
+                    state.pastEssays = JSON.parse(savedEssays);
+                } catch(e) { state.pastEssays = []; }
+            }
+
+            const savedStreak = localStorage.getItem(`bluem_streak_${state.username}`);
+            if (savedStreak) state.streakDays = parseInt(savedStreak, 10);
+
+            // Sync Nav Text
+            document.getElementById('nav-username').innerText = `@${state.username}`;
+            document.getElementById('mobile-username').innerText = `@${state.username}`;
+        }
+
+        function saveUserData() {
+            localStorage.setItem('bluem_username', state.username);
+            localStorage.setItem(`bluem_essays_${state.username}`, JSON.stringify(state.pastEssays));
+            localStorage.setItem(`bluem_streak_${state.username}`, state.streakDays.toString());
+        }
+
+        /* NAVIGATION & TAB SWITCHING */
+        function switchTab(tabId) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(t => t.classList.remove('active'));
+
+            // Deactivate all nav links
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(l => l.classList.remove('active'));
+
+            // Show selected tab
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            if (targetTab) targetTab.classList.add('active');
+
+            // Set active nav link
+            const targetNav = document.getElementById(`nav-${tabId}`);
+            if (targetNav) targetNav.classList.add('active');
+
+            if (tabId === 'history') renderHistoryList();
+            if (tabId === 'dashboard') updateDashboardUI();
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        /* USER PROFILE MODAL */
+        function openUserModal() {
+            document.getElementById('username-input').value = state.username;
+            document.getElementById('user-modal').classList.remove('hidden');
+        }
+
+        function closeUserModal() {
+            document.getElementById('user-modal').classList.add('hidden');
+        }
+
+        function saveUserProfile() {
+            const val = document.getElementById('username-input').value.trim();
+            if (val) {
+                state.username = val;
+                loadUserData();
+                updateDashboardUI();
+                closeUserModal();
+            }
+        }
+
+        /* DASHBOARD UI UPDATES */
+        function updateDashboardUI() {
+            document.getElementById('streak-counter').innerText = `${state.streakDays} DAY STREAK`;
+            document.getElementById('mobile-streak-counter').innerText = `${state.streakDays} DAY STREAK`;
+            document.getElementById('stat-streak-days').innerText = `${state.streakDays} Days`;
+            document.getElementById('stat-total-essays').innerText = state.pastEssays.length;
+
+            // Compute Average & Best Score
+            if (state.pastEssays.length > 0) {
+                const scores = state.pastEssays.map(e => e.score);
+                const avg = (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1);
+                const best = Math.max(...scores).toFixed(1);
+
+                document.getElementById('stat-avg-score').innerText = avg;
+                document.getElementById('stat-best-score').innerText = best;
+            } else {
+                document.getElementById('stat-avg-score').innerText = "0.0";
+                document.getElementById('stat-best-score').innerText = "0.0";
+            }
+
+            // Update Progress Ring SVG
+            const count = state.essaysWrittenToday;
+            document.getElementById('dash-essays-done-num').innerText = `${count}/3`;
+            const strokeDash = (count / 3) * 100;
+            document.getElementById('dashboard-progress-ring').setAttribute('stroke-dasharray', `${strokeDash}, 100`);
+        }
+
+        /* ------------------------------------------------------------------
+           3-ESSAY SEQUENTIAL SPRINT TRAINER LOGIC
+        ------------------------------------------------------------------ */
+        function startTrainingSession() {
+            switchTab('trainer');
+            
+            // Pick 3 random distinct topics
+            const shuffled = [...TOPICS_BANK].sort(() => 0.5 - Math.random());
+            state.sprintTopics = shuffled.slice(0, 3);
+            state.currentSprintStep = 1;
+            state.sprintResponses = [];
+
+            setupSprintStep(1);
+        }
+
+        function startSingleTopicPractice(topicObj) {
+            switchTab('trainer');
+            const topic = topicObj || TOPICS_BANK[0];
+            state.sprintTopics = [topic];
+            state.currentSprintStep = 1;
+            state.sprintResponses = [];
+
+            setupSprintStep(1);
+        }
+
+        function setupSprintStep(step) {
+            state.currentSprintStep = step;
+
+            // UI step indicators
+            for (let i = 1; i <= 3; i++) {
+                const el = document.getElementById(`trainer-step-${i}`);
+                if (i === step) {
+                    el.className = "w-8 h-8 rounded-full border border-pink bg-pink text-paper font-bold text-xs flex items-center justify-center font-mono";
+                } else if (i < step) {
+                    el.className = "w-8 h-8 rounded-full border border-emerald-400 bg-emerald-400 text-paper font-bold text-xs flex items-center justify-center font-mono";
+                    el.innerText = "✓";
+                } else {
+                    el.className = "w-8 h-8 rounded-full border border-line text-ink-soft font-bold text-xs flex items-center justify-center font-mono";
+                    el.innerText = i.toString();
+                }
+            }
+
+            // Show writing area, hide AI feedback & summary
+            document.getElementById('trainer-writing-area').classList.remove('hidden');
+            document.getElementById('trainer-ai-feedback-view').classList.add('hidden');
+            document.getElementById('trainer-sprint-summary-view').classList.add('hidden');
+
+            // Populate topic data
+            const currTopic = state.sprintTopics[step - 1] || TOPICS_BANK[0];
+            document.getElementById('trainer-essay-index').innerText = `Essay ${step} of ${state.sprintTopics.length}`;
+            document.getElementById('trainer-topic-category').innerText = currTopic.category;
+            document.getElementById('trainer-topic-en').innerText = currTopic.en;
+            document.getElementById('trainer-topic-ru').innerText = currTopic.ru;
+
+            // Reset textarea & character count
+            document.getElementById('essay-textarea').value = "";
+            handleEssayInput();
+
+            // Reset & Start 15-minute Timer
+            startTimer(900);
+        }
+
+        /* TIMER CONTROLS */
+        function startTimer(seconds) {
+            clearInterval(state.timerInterval);
+            state.timerSeconds = seconds;
+
+            state.timerInterval = setInterval(() => {
+                state.timerSeconds--;
+                const mins = Math.floor(state.timerSeconds / 60);
+                const secs = state.timerSeconds % 60;
+                document.getElementById('trainer-timer').innerText = 
+                    `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+                if (state.timerSeconds <= 0) {
+                    clearInterval(state.timerInterval);
+                    alert("Time's up! Submitting your current essay draft.");
+                    submitCurrentEssay();
+                }
+            }, 1000);
+        }
+
+        /* CHARACTER COUNT ENFORCEMENT & AUTOSAVE */
+        function handleEssayInput() {
+            const text = document.getElementById('essay-textarea').value;
+            const count = text.length;
+            const badge = document.getElementById('char-counter-badge');
+            const submitBtn = document.getElementById('submit-essay-btn');
+            const warningBox = document.getElementById('editor-warning');
+
+            document.getElementById('char-count').innerText = count;
+
+            // Save draft locally
+            localStorage.setItem(`bluem_draft_${state.username}_${state.currentSprintStep}`, text);
+            document.getElementById('autosave-status').innerText = "Draft auto-saved locally";
+
+            // Character limits check (250 - 1500)
+            if (count < 250) {
+                badge.className = "text-xs px-3 py-1 rounded-full bg-paper3 border border-line text-amber-400 font-medium font-mono";
+                submitBtn.disabled = true;
+                submitBtn.className = "bg-pink opacity-50 cursor-not-allowed text-paper font-extrabold text-sm uppercase tracking-widest px-8 py-3.5 rounded-xl transition-all font-mono";
+                warningBox.classList.remove('hidden');
+                warningBox.innerText = `Minimum 250 characters required. You need ${250 - count} more.`;
+            } else if (count > 1500) {
+                badge.className = "text-xs px-3 py-1 rounded-full bg-red-950 border border-red-500 text-red-400 font-medium font-mono";
+                submitBtn.disabled = true;
+                submitBtn.className = "bg-pink opacity-50 cursor-not-allowed text-paper font-extrabold text-sm uppercase tracking-widest px-8 py-3.5 rounded-xl transition-all font-mono";
+                warningBox.classList.remove('hidden');
+                warningBox.innerText = `Maximum limit 1500 characters exceeded by ${count - 1500}. Please trim text.`;
+            } else {
+                badge.className = "text-xs px-3 py-1 rounded-full bg-emerald-950 border border-emerald-500 text-emerald-400 font-medium font-mono";
+                submitBtn.disabled = false;
+                submitBtn.className = "bg-pink hover:bg-pink-deep text-paper font-extrabold text-sm uppercase tracking-widest px-8 py-3.5 rounded-xl transition-all shadow-md cursor-pointer font-mono";
+                warningBox.classList.add('hidden');
+            }
+        }
+
+        function checkDraftOnLoad() {
+            const savedDraft = localStorage.getItem(`bluem_draft_${state.username}_1`);
+            if (savedDraft && savedDraft.length > 50) {
+                document.getElementById('autosave-status').innerText = "Unsaved draft available!";
+            }
+        }
+
+        function clearDraftAndReset() {
+            localStorage.removeItem(`bluem_draft_${state.username}_${state.currentSprintStep}`);
+            document.getElementById('essay-textarea').value = "";
+            handleEssayInput();
+        }
+
+        function confirmResetTrainer() {
+            if (confirm("Are you sure you want to exit this essay session? Progress will be lost.")) {
+                clearInterval(state.timerInterval);
+                switchTab('dashboard');
+            }
+        }
+
+        /* ------------------------------------------------------------------
+           AI ESSAY EVALUATOR ENGINE (SIMULATED INTELLIGENT FEEDBACK)
+        ------------------------------------------------------------------ */
+        function submitCurrentEssay() {
+            clearInterval(state.timerInterval);
+            const text = document.getElementById('essay-textarea').value;
+            const currentTopic = state.sprintTopics[state.currentSprintStep - 1];
+
+            // AI Evaluation Logic Calculation
+            const evalResult = generateAIEvaluation(text, currentTopic);
+
+            // Store result in sprint responses
+            state.sprintResponses.push({
+                topic: currentTopic,
+                text: text,
+                eval: evalResult,
+                date: new Date().toLocaleDateString()
+            });
+
+            // Save to past essay history
+            state.pastEssays.unshift({
+                topicTitle: currentTopic.en,
+                category: currentTopic.category,
+                score: evalResult.overallScore,
+                charCount: text.length,
+                date: new Date().toLocaleDateString(),
+                eval: evalResult,
+                originalText: text
+            });
+            saveUserData();
+
+            // Display AI Feedback Screen
+            renderAIFeedbackUI(evalResult, text);
+        }
+
+        function generateAIEvaluation(text, topic) {
+            const length = text.length;
+            
+            let grammarScore = length > 600 ? 8.5 : 7.5;
+            let vocabScore = (text.includes("initiative") || text.includes("challenge") || text.includes("adapted")) ? 9.0 : 8.0;
+            let structScore = length > 800 ? 9.0 : 8.0;
+            let contentScore = 8.5;
+
+            const overallScore = parseFloat(((grammarScore + vocabScore + structScore + contentScore) / 4).toFixed(1));
+
+            // Generate specific mistake corrections
+            const corrections = [
+                {
+                    orig: "I am helping my host family every day",
+                    corr: "I help my host family every day",
+                    rule: "Use Present Simple for recurring habits, not Present Continuous."
+                },
+                {
+                    orig: "I have joined the sports club last month",
+                    corr: "I joined the sports club last month",
+                    rule: "Specific past time markers (last month) require Past Simple."
+                },
+                {
+                    orig: "Because I was nervous, so I didn't speak",
+                    corr: "Because I was nervous, I didn't speak",
+                    rule: "Avoid using both 'because' and 'so' in a single clause."
+                }
+            ];
+
+            const improvedText = text + " Furthermore, this experience taught me the invaluable lesson of open communication and personal adaptability in unfamiliar environments.";
+
+            const tips = [
+                "Vary your sentence starters—try starting with adverbial phrases (e.g., *'Despite the difficulty...'*).",
+                "Ensure every body paragraph features a specific action you personally performed.",
+                "Maintain past tense consistency when recounting personal anecdotes."
+            ];
+
+            return {
+                overallScore,
+                grammarScore,
+                vocabScore,
+                structScore,
+                contentScore,
+                corrections,
+                improvedText,
+                tips
+            };
+        }
+
+        function renderAIFeedbackUI(evalData, originalText) {
+            document.getElementById('trainer-writing-area').classList.add('hidden');
+            document.getElementById('trainer-ai-feedback-view').classList.remove('hidden');
+
+            document.getElementById('ai-overall-score-text').innerText = evalData.overallScore.toFixed(1);
+            
+            // Scores & Bars
+            document.getElementById('score-grammar-num').innerText = `${evalData.grammarScore}/10`;
+            document.getElementById('bar-grammar').style.width = `${evalData.grammarScore * 10}%`;
+
+            document.getElementById('score-vocab-num').innerText = `${evalData.vocabScore}/10`;
+            document.getElementById('bar-vocab').style.width = `${evalData.vocabScore * 10}%`;
+
+            document.getElementById('score-struct-num').innerText = `${evalData.structScore}/10`;
+            document.getElementById('bar-struct').style.width = `${evalData.structScore * 10}%`;
+
+            document.getElementById('score-content-num').innerText = `${evalData.contentScore}/10`;
+            document.getElementById('bar-content').style.width = `${evalData.contentScore * 10}%`;
+
+            // Populate Corrections Table
+            const tbody = document.getElementById('corrections-table-body');
+            tbody.innerHTML = evalData.corrections.map(c => `
+                <tr>
+                    <td class="p-3 text-red-400 font-medium line-through">${c.orig}</td>
+                    <td class="p-3 text-emerald-400 font-semibold">${c.corr}</td>
+                    <td class="p-3 text-ink-soft">${c.rule}</td>
+                </tr>
+            `).join('');
+
+            // Improved Version & Tips
+            document.getElementById('improved-essay-text').innerText = evalData.improvedText;
+            document.getElementById('ai-recommendations-list').innerHTML = evalData.tips.map(t => `<li>${t}</li>`).join('');
+
+            // Set Button text based on step
+            const nextBtn = document.getElementById('next-sprint-step-btn');
+            if (state.currentSprintStep < state.sprintTopics.length) {
+                nextBtn.innerText = `Continue to Essay ${state.currentSprintStep + 1} →`;
+            } else {
+                nextBtn.innerText = `Finish Sprint & View Summary 🎉`;
+            }
+        }
+
+        function copyImprovedEssay() {
+            const text = document.getElementById('improved-essay-text').innerText;
+            navigator.clipboard.writeText(text);
+            alert("Improved essay text copied to clipboard!");
+        }
+
+        function proceedToNextSprintStep() {
+            if (state.currentSprintStep < state.sprintTopics.length) {
+                setupSprintStep(state.currentSprintStep + 1);
+            } else {
+                // Show final sprint summary
+                document.getElementById('trainer-ai-feedback-view').classList.add('hidden');
+                document.getElementById('trainer-sprint-summary-view').classList.remove('hidden');
+
+                // Update today's essays counter & streak
+                state.essaysWrittenToday += 3;
+                state.streakDays += 1;
+                saveUserData();
+                updateDashboardUI();
+
+                // Compute summary stats
+                const avgScore = (state.sprintResponses.reduce((acc, r) => acc + r.eval.overallScore, 0) / state.sprintResponses.length).toFixed(1);
+                const totalChars = state.sprintResponses.reduce((acc, r) => acc + r.text.length, 0);
+
+                document.getElementById('sprint-avg-score').innerText = avgScore;
+                document.getElementById('sprint-total-chars').innerText = totalChars.toLocaleString();
+                document.getElementById('sprint-new-streak').innerText = `${state.streakDays} Days`;
+            }
+        }
+
+        /* ------------------------------------------------------------------
+           BANK OF TOPICS RENDER & FILTER
+        ------------------------------------------------------------------ */
+        function renderTopicsBank(topics) {
+            const grid = document.getElementById('topics-grid');
+            grid.innerHTML = topics.map(t => `
+                <div class="glass-card glass-card-hover p-5 rounded-xl border border-line flex flex-col justify-between space-y-4">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between font-mono">
+                            <span class="text-[10px] font-semibold text-pink uppercase px-2 py-0.5 rounded bg-pink/10">Topic #${t.id}</span>
+                            <span class="text-[10px] font-medium text-ink-soft bg-paper3 px-2 py-0.5 rounded">${t.category}</span>
+                        </div>
+                        <h4 class="text-base font-bold text-ink">${t.en}</h4>
+                        <p class="text-xs text-ink-soft italic">${t.ru}</p>
+                    </div>
+                    <div class="pt-2 border-t border-line-faint flex justify-end">
+                        <button onclick='startSingleTopicPractice(${JSON.stringify(t)})' class="bg-paper2 hover:bg-pink hover:text-paper text-ink border border-line text-xs font-semibold px-4 py-1.5 rounded-lg transition-all font-mono">
+                            Practice Topic →
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterTopics() {
+            const query = document.getElementById('topic-search-input').value.toLowerCase();
+            const category = document.getElementById('topic-category-filter').value;
+
+            const filtered = TOPICS_BANK.filter(t => {
+                const matchesSearch = t.en.toLowerCase().includes(query) || t.ru.toLowerCase().includes(query);
+                const matchesCategory = category === 'ALL' || t.category === category;
+                return matchesSearch && matchesCategory;
+            });
+
+            renderTopicsBank(filtered);
+        }
+
+        function practiceRandomTopic() {
+            const randomTopic = TOPICS_BANK[Math.floor(Math.random() * TOPICS_BANK.length)];
+            startSingleTopicPractice(randomTopic);
+        }
+
+        /* ------------------------------------------------------------------
+           ESSAY HISTORY ARCHIVE RENDER
+        ------------------------------------------------------------------ */
+        function renderHistoryList() {
+            const container = document.getElementById('history-container');
+
+            if (state.pastEssays.length === 0) {
+                container.innerHTML = `
+                    <div class="glass-card p-12 text-center rounded-2xl border border-line space-y-3">
+                        <div class="text-4xl">📝</div>
+                        <h3 class="text-lg font-bold text-ink">No essays written yet</h3>
+                        <p class="text-xs text-ink-soft">Complete your first 15-minute essay sprint to see history and AI breakdown here.</p>
+                        <button onclick="startTrainingSession()" class="bg-pink text-paper font-bold text-xs px-6 py-2.5 rounded-xl uppercase tracking-wider font-mono">Start First Sprint</button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = state.pastEssays.map((essay, idx) => `
+                <div class="glass-card p-6 rounded-2xl border border-line space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-line-faint pb-3">
+                        <div>
+                            <span class="text-[10px] font-semibold text-pink uppercase px-2 py-0.5 rounded bg-pink/10 font-mono">${essay.category}</span>
+                            <h4 class="text-lg font-bold text-ink mt-1">${essay.topicTitle}</h4>
+                        </div>
+                        <div class="flex items-center space-x-3 font-mono">
+                            <span class="text-xs text-ink-soft font-medium">${essay.date}</span>
+                            <span class="font-bold text-xl text-pink px-3 py-1 rounded-xl bg-paper2 border border-line">${essay.score}/10</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-ink-soft line-clamp-2 italic font-mono">
+                        "${essay.originalText}"
+                    </p>
+                    <div class="flex items-center justify-between text-xs font-medium pt-2 text-ink-faint font-mono">
+                        <span>Length: ${essay.charCount} chars</span>
+                        <button onclick="viewHistoryDetail(${idx})" class="text-pink hover:underline">View Full Breakdown & AI Feedback →</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewHistoryDetail(index) {
+            const essay = state.pastEssays[index];
+            if (essay && essay.eval) {
+                switchTab('trainer');
+                renderAIFeedbackUI(essay.eval, essay.originalText);
+                document.getElementById('next-sprint-step-btn').innerText = "Back to History";
+                document.getElementById('next-sprint-step-btn').onclick = function() { switchTab('history'); };
+            }
+        }
+
+        /* ------------------------------------------------------------------
+           VOCABULARY HUB RENDER
+        ------------------------------------------------------------------ */
+        function renderVocabCards() {
+            const container = document.getElementById('vocab-cards-grid');
+            container.innerHTML = VOCAB_LIST.map(v => `
+                <div class="bg-paper2/60 p-4 rounded-xl border border-line space-y-2">
+                    <div class="flex items-center justify-between font-mono">
+                        <span class="text-base font-bold text-ink">${v.word}</span>
+                        <span class="text-[10px] font-semibold text-pink">${v.ipa}</span>
+                    </div>
+                    <p class="text-xs text-ink-soft">${v.def}</p>
+                    <p class="text-[11px] text-ink-faint italic border-t border-line-faint pt-2 font-mono">"${v.ex}"</p>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
